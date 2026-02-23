@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>北海道旅遊旗艦版 V17</title>
+    <title>北海道旅遊旗艦版 V18</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -14,17 +14,17 @@
         .text-serenity { color: #91A8D0; }
         .timeline-line::before { content: ''; position: absolute; left: 19px; top: 0; bottom: 0; width: 2px; background-color: #91A8D0; opacity: 0.2; }
         .boarding-pass { background: linear-gradient(135deg, #91A8D0 0%, #768DB5 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(145,168,208,0.2); }
-        .boarding-pass::after { content: ''; position: absolute; bottom: 30px; left: -10px; right: -10px; height: 1px; border-bottom: 2px dashed rgba(255,255,255,0.3); }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .header-pill { background: #91A8D0; color: white; padding: 6px 16px; border-radius: 10px; font-weight: 900; letter-spacing: 0.1em; display: inline-block; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(145,168,208,0.3); }
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body x-data="travelApp()" x-cloak>
+<body x-data="travelApp()" x-init="init()" x-cloak>
 
     <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-50 flex justify-around items-center py-2 pb-safe shadow-lg">
-        <template x-for="t in ['schedule', 'info', 'packing', 'store', 'budget']">
-            <button @click="tab = t" :class="tab === t ? 'text-serenity scale-110' : 'text-gray-400'" class="flex flex-col items-center flex-1 transition-all duration-300">
+        <template x-for="t in ['schedule', 'info', 'packing', 'store', 'japanese']">
+            <button @click="changeTab(t)" :class="tab === t ? 'text-serenity scale-110' : 'text-gray-400'" class="flex flex-col items-center flex-1 transition-all duration-300">
                 <i :data-lucide="tabIcons[t]" class="w-6 h-6"></i>
                 <span class="text-[10px] mt-1 font-bold" x-text="tabNames[t]"></span>
             </button>
@@ -33,66 +33,36 @@
 
     <main class="pb-28 pt-4 px-4 max-w-md mx-auto">
         <header class="mb-4 flex justify-between items-center border-b border-gray-100 pb-2">
-            <div><h1 class="text-2xl font-black text-serenity">HOKKAIDO 2026</h1><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Mobile Flagship V17</p></div>
+            <div><h1 class="text-2xl font-black text-serenity tracking-tighter">HOKKAIDO 2026</h1><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Final V18</p></div>
             <div class="bg-serenity text-white p-2 rounded-full shadow-lg shadow-serenity/30"><i data-lucide="plane" class="w-5 h-5"></i></div>
         </header>
 
         <div x-show="tab === 'schedule'" x-transition>
             <div class="mb-4 space-y-3">
-                <div class="relative">
-                    <input type="text" x-model="searchQuery" placeholder="搜尋行程、地點、備註..." class="w-full bg-white rounded-xl p-3 pl-10 text-sm shadow-sm outline-none focus:ring-2 focus:ring-serenity/50 border-none">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3.5 text-gray-300"></i>
-                </div>
+                <div class="relative"><input type="text" x-model="searchQuery" placeholder="搜尋行程、地點、備註..." class="w-full bg-white rounded-xl p-3 pl-10 text-sm shadow-sm outline-none border-none"><i data-lucide="search" class="w-4 h-4 absolute left-3 top-3.5 text-gray-300"></i></div>
                 <div class="card p-3 bg-blue-50 border border-blue-100 flex items-center justify-between">
-                    <div class="flex items-center gap-3"><i data-lucide="cloud-sun" class="text-blue-400"></i>
-                        <p class="text-sm font-bold text-gray-700" x-text="selectedCity + ' 天氣預報'"></p>
-                    </div>
-                    <a :href="'https://weathernews.jp/onebox/' + (selectedCity === '札幌' ? '43.06/141.35' : '42.55/140.82')" target="_blank" class="text-xs bg-blue-400 text-white px-3 py-1 rounded-lg font-bold no-underline">教學連結</a>
+                    <div class="flex items-center gap-3"><i data-lucide="cloud-sun" class="text-blue-400"></i><p class="text-sm font-bold text-gray-700" x-text="selectedCity + ' 天氣預報'"></p></div>
+                    <a :href="'https://weathernews.jp/onebox/' + (selectedCity === '札幌' ? '43.06/141.35' : '42.55/140.82')" target="_blank" class="text-xs bg-blue-400 text-white px-3 py-1 rounded-lg font-bold no-underline">查看</a>
                 </div>
             </div>
-
             <div class="flex overflow-x-auto gap-3 mb-6 hide-scrollbar py-1">
-                <template x-for="date in dates">
-                    <button @click="selectedDate = date" :class="selectedDate === date ? 'bg-serenity text-white shadow-md scale-105' : 'bg-white text-gray-400'" class="flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300">
-                        <span class="text-[10px] font-bold uppercase" x-text="date.split('/')[1] + '月'"></span>
-                        <span class="text-xl font-black" x-text="date.split('/')[2]"></span>
-                    </button>
-                </template>
+                <template x-for="date in dates"><button @click="selectedDate = date" :class="selectedDate === date ? 'bg-serenity text-white shadow-md scale-105' : 'bg-white text-gray-400'" class="flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300"><span class="text-[10px] font-bold uppercase" x-text="date.split('/')[1] + '月'"></span><span class="text-xl font-black" x-text="date.split('/')[2]"></span></button></template>
             </div>
-
             <template x-if="selectedDate === '2026/04/09' && !searchQuery">
-                <div class="card p-5 mb-8 border-l-8 border-orange-400 bg-orange-50 shadow-md">
-                    <h3 class="font-bold text-orange-800 flex items-center gap-2 mb-2"><i data-lucide="qr-code" class="w-5 h-5"></i> Visit Japan Web 提醒</h3>
-                    <p class="text-sm text-orange-700 mb-4 font-medium leading-snug">入境必備截圖 QR Code。托運限 23kg。</p>
-                    <div class="flex gap-2">
-                        <a href="https://www.vjw.digital.go.jp/main/#/vjwplo001" target="_blank" class="bg-orange-400 text-white text-[11px] px-4 py-2 rounded-xl font-bold no-underline text-center flex-1">前往官網</a>
-                        <a href="https://jpn-study.com.tw/visit-japan-web/" target="_blank" class="border border-orange-400 text-orange-400 text-[11px] px-4 py-2 rounded-xl font-bold no-underline text-center flex-1">教學連結</a>
-                    </div>
-                </div>
+                <div class="card p-5 mb-8 border-l-8 border-orange-400 bg-orange-50 shadow-md"><h3 class="font-bold text-orange-800 flex items-center gap-2 mb-2"><i data-lucide="qr-code" class="w-5 h-5"></i> Visit Japan Web 提醒</h3><p class="text-sm text-orange-700 mb-4 font-medium leading-snug">入境必備 QR Code。托運限 23kg。</p><div class="flex gap-2"><a href="https://www.vjw.digital.go.jp/main/#/vjwplo001" target="_blank" class="bg-orange-400 text-white text-[11px] px-4 py-2 rounded-xl font-bold no-underline text-center flex-1">前往官網</a><a href="https://jpn-study.com.tw/visit-japan-web/" target="_blank" class="border border-orange-400 text-orange-400 text-[11px] px-4 py-2 rounded-xl font-bold no-underline text-center flex-1">教學</a></div></div>
             </template>
-
             <div class="relative timeline-line ml-2">
                 <template x-for="item in filteredItinerary" :key="item.Activity + Math.random()">
                     <div class="mb-8 relative pl-10">
-                        <div :class="getCatStyles(item.Category).bg" class="absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center text-white z-10 border-4 border-white shadow-sm">
-                            <i :data-lucide="getCatStyles(item.Category).icon" class="w-5 h-5"></i>
-                        </div>
+                        <div :class="getCatStyles(item.Category).bg" class="absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center text-white z-10 border-4 border-white shadow-sm"><i :data-lucide="getCatStyles(item.Category).icon" class="w-5 h-5"></i></div>
                         <div class="card p-4">
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-[10px] font-bold text-gray-400" x-text="item.Time || item.TimeOfDay"></span>
-                                <span :class="getCatStyles(item.Category).text" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 border border-gray-100 font-bold uppercase" x-text="item.Category"></span>
-                            </div>
+                            <div class="flex justify-between items-start mb-1"><span class="text-[10px] font-bold text-gray-400" x-text="item.Time || item.TimeOfDay"></span><span :class="getCatStyles(item.Category).text" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 border border-gray-100 font-bold uppercase" x-text="item.Category"></span></div>
                             <h3 class="font-bold text-gray-800 text-lg leading-tight" x-text="item.Activity"></h3>
                             <div class="mt-2 text-sm text-gray-500 leading-relaxed whitespace-pre-wrap break-words" x-html="item.Notes"></div>
-                            
                             <template x-if="shouldShowMap(item.Activity)">
                                 <div class="mt-3 flex gap-4 pt-3 border-t border-gray-50">
-                                    <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.Activity + ' ' + (item.City || ''))" target="_blank" class="flex items-center text-[11px] text-serenity font-bold no-underline">
-                                        <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i> 地圖
-                                    </a>
-                                    <a :href="'https://www.clubjt.jp/map/?q=' + encodeURIComponent(item.Activity)" target="_blank" class="flex items-center text-[11px] text-gray-400 no-underline">
-                                        <i data-lucide="wind" class="w-3 h-3 mr-1"></i> 吸菸區
-                                    </a>
+                                    <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.Activity + ' ' + (item.City || ''))" target="_blank" class="flex items-center text-[11px] text-serenity font-bold no-underline"><i data-lucide="map-pin" class="w-3 h-3 mr-1"></i> 地圖</a>
+                                    <a :href="'https://www.clubjt.jp/map/?q=' + encodeURIComponent(item.Activity)" target="_blank" class="flex items-center text-[11px] text-gray-400 no-underline"><i data-lucide="wind" class="w-3 h-3 mr-1"></i> 吸菸區</a>
                                 </div>
                             </template>
                         </div>
@@ -102,22 +72,33 @@
         </div>
 
         <div x-show="tab === 'info'" x-transition>
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="info" class="text-serenity"></i> 交通與住宿</h2>
-            <div class="boarding-pass text-white p-6 mb-4">
-                <div class="flex justify-between items-center mb-6"><div><p class="text-[10px] opacity-70 uppercase">CI130</p><p class="text-lg font-bold">04/09 (去程)</p></div></div>
-                <div class="flex justify-between items-center mb-6 text-center"><p class="text-4xl font-black">TPE</p><i data-lucide="plane" class="w-6 h-6"></i><p class="text-4xl font-black">CTS</p></div>
-                <p class="text-xs font-bold">Boarding: 08:00 | Gate: A7</p>
-            </div>
-            <div class="boarding-pass text-white p-6 mb-6">
-                <div class="flex justify-between items-center mb-6"><div><p class="text-[10px] opacity-70 uppercase">CI131</p><p class="text-lg font-bold">04/14 (回程)</p></div></div>
-                <div class="flex justify-between items-center mb-6 text-center"><p class="text-4xl font-black">CTS</p><i data-lucide="plane" class="w-6 h-6 rotate-180"></i><p class="text-4xl font-black">TPE</p></div>
-                <p class="text-xs font-bold">Boarding: 14:15 | Gate: TBA</p>
-            </div>
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="info" class="text-serenity"></i> 重要資訊</h2>
+            
+            <div class="boarding-pass text-white p-6 mb-4"><div class="flex justify-between items-center mb-6"><div><p class="text-[10px] opacity-70 uppercase tracking-widest">CI130 (去程)</p></div></div><div class="flex justify-between items-center mb-6 text-center"><p class="text-4xl font-black">TPE</p><i data-lucide="plane" class="w-6 h-6"></i><p class="text-4xl font-black">CTS</p></div><p class="text-xs font-bold text-center">Boarding: 08:00 | Gate: A7</p></div>
+            <div class="boarding-pass text-white p-6 mb-6"><div class="flex justify-between items-center mb-6"><div><p class="text-[10px] opacity-70 uppercase tracking-widest">CI131 (回程)</p></div></div><div class="flex justify-between items-center mb-6 text-center"><p class="text-4xl font-black">CTS</p><i data-lucide="plane" class="w-6 h-6 rotate-180"></i><p class="text-4xl font-black">TPE</p></div><p class="text-xs font-bold text-center">Boarding: 14:15 | Gate: TBA</p></div>
+
             <a href="https://www.clubjt.jp/map/" target="_blank" class="card p-5 mb-6 flex items-center justify-between border-l-8 border-gray-400 bg-gray-50/50 no-underline shadow-sm">
-                <div class="flex items-center gap-3"><div class="bg-white p-2 rounded-lg text-gray-500 shadow-sm"><i data-lucide="wind" class="w-6 h-6"></i></div><div><h3 class="font-bold text-gray-800 uppercase tracking-tighter">日本吸菸區地圖</h3><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">CLUB JT Official</p></div></div>
+                <div class="flex items-center gap-3"><div class="bg-white p-2 rounded-lg text-gray-500 shadow-sm"><i data-lucide="wind" class="w-6 h-6"></i></div><div><h3 class="font-bold text-gray-800 tracking-tighter">日本吸菸區地圖</h3><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">CLUB JT Official</p></div></div>
                 <i data-lucide="external-link" class="text-gray-300 w-5 h-5"></i>
             </a>
-            <div class="card p-5 border-l-8 border-serenity bg-blue-50/20"><h3 class="font-bold text-lg leading-tight uppercase text-gray-800">ザ・レイクスイート 湖の栖</h3><div class="mt-2 bg-white/80 p-4 rounded-xl text-xs font-mono font-bold text-gray-600 space-y-1 shadow-sm border border-blue-100"><p class="text-serenity text-[10px] font-black uppercase mb-1 tracking-widest">預約編號 (8名)</p>
+
+            <div class="card p-5 mb-4 border-l-8 border-serenity bg-slate-50/30">
+                <h3 class="font-bold text-lg text-gray-800 leading-tight">三井花園酒店 札幌西</h3>
+                <p class="text-xs text-gray-400 mt-1">Mitsui Garden Hotel Sapporo West</p>
+                <div class="mt-3 space-y-2 text-sm text-gray-600 font-medium">
+                    <p class="flex items-center gap-2">📍 札幌市中央区北５条西６丁目２−４</p>
+                    <div class="flex gap-2">
+                        <a href="https://www.booking.com/Share-l4pcnT" target="_blank" class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded font-bold no-underline">Booking.com 頁面</a>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-slate-100 text-xs leading-relaxed">
+                        • 15:00-21:00 有免費飲料 Bar<br>
+                        • 飯店有大浴場（澡堂）<br>
+                        • 上午 11:00 退房
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-5 border-l-8 border-serenity bg-blue-50/20"><h3 class="font-bold text-lg uppercase text-gray-800 leading-tight">ザ・レイクスイート 湖の栖</h3><div class="mt-2 bg-white/80 p-4 rounded-xl text-xs font-mono font-bold text-gray-600 space-y-1 shadow-sm border border-blue-100"><p class="text-serenity text-[10px] font-black uppercase mb-1 tracking-widest border-b border-blue-50 pb-1">預約編號 (8名)</p>
             <p>• T9B3C11A2B3D8</p><p>• T22F3209C08C2</p><p>• TB2B86F176D2D</p></div></div>
         </div>
 
@@ -127,37 +108,19 @@
         </div>
 
         <div x-show="tab === 'store'" x-transition>
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="shopping-cart" class="text-serenity"></i> 四大超商必買清單</h2>
-            <div class="space-y-8">
-                <template x-for="store in conv_store" :key="store.store">
-                    <div>
-                        <h3 class="font-black text-gray-700 mb-4 flex items-center gap-3"><i data-lucide="star" class="w-5 h-5 text-serenity"></i><span x-text="store.store"></span></h3>
-                        <div class="grid gap-4">
-                            <template x-for="item in store.items">
-                                <div class="card p-5 transition-all duration-300 shadow-sm border border-transparent"><p class="font-black text-serenity text-base mb-1" x-text="item.name"></p><p class="text-xs text-gray-400 leading-relaxed font-medium" x-text="item.desc"></p></div>
-                            </template>
-                        </div>
-                    </div>
-                </template>
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="shopping-cart" class="text-serenity"></i> 四大超商必買推薦</h2>
+            <div class="space-y-10">
+                <template x-for="store in conv_store"><div><div class="header-pill" x-text="store.store"></div><div class="grid gap-4"><template x-for="item in store.items"><div class="card p-5 group hover:border-serenity transition-all duration-300 shadow-sm border border-transparent"><p class="font-black text-serenity text-base mb-1" x-text="item.name"></p><p class="text-xs text-gray-400 leading-relaxed font-medium" x-text="item.desc"></p></div></template></div></div></template>
             </div>
         </div>
 
-        <div x-show="tab === 'budget'" x-transition>
-            <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="wallet" class="text-serenity"></i> 費用加總與統計</h2>
-            <div class="card p-6 mb-6 bg-serenity text-white shadow-xl flex justify-between items-center relative overflow-hidden border-none">
-                <div class="relative z-10"><p class="text-[10px] font-bold opacity-70 mb-1 uppercase tracking-widest tracking-tighter">Est. Total Expenses</p><span class="text-2xl font-bold">¥</span><span class="text-4xl font-black" x-text="totalJPY.toLocaleString()"></span><p class="mt-2 text-lg font-bold opacity-90">NT$ <span x-text="totalTWD.toLocaleString()"></span></p></div>
-                <div class="w-20 h-20 rounded-full border-4 border-white/20 relative flex items-center justify-center overflow-hidden" :style="`background: conic-gradient(#fff ${chartPercent}%, rgba(255,255,255,0.2) 0)`"><div class="absolute inset-2 bg-serenity rounded-full flex items-center justify-center text-[10px] font-black" x-text="chartPercent + '%'"></div></div>
+        <div x-show="tab === 'japanese'" x-transition>
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="languages" class="text-serenity"></i> 旅遊常用日語</h2>
+            <div class="space-y-10">
+                <template x-for="cat in japanesePhrases"><div><div class="header-pill" x-text="cat.category"></div><div class="space-y-3">
+                    <template x-for="phrase in cat.phrases"><div class="card p-4 flex justify-between items-center active:bg-slate-50 transition-colors shadow-sm"><div class="flex-1"><p class="text-[10px] text-gray-400 font-black mb-1" x-text="phrase.zh"></p><p class="text-lg font-bold text-gray-800 mb-0.5" x-text="phrase.jp"></p><p class="text-[10px] text-serenity font-mono uppercase font-bold" x-text="phrase.romaji"></p></div><button @click="speak(phrase.jp)" class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-serenity shadow-inner ml-2 active:scale-90 transition-all border border-blue-50"><i data-lucide="volume-2" class="w-6 h-6"></i></button></div></template>
+                </div></div></template>
             </div>
-            <div class="grid grid-cols-5 gap-1.5 mb-6">
-                <template x-for="cat in ['食', '行', '住', '購', '他']"><div class="bg-white p-2 rounded-xl shadow-sm text-center border border-gray-50"><p class="text-[10px] text-gray-400 font-bold mb-1" x-text="cat"></p><p class="text-[9px] font-black text-serenity leading-none" x-text="'¥'+Math.round(getCatTotal(cat)/1000)+'k'"></p></div></template>
-            </div>
-            <div class="card p-5 mb-6 space-y-3 shadow-xl">
-                <input type="text" x-model="newExpense.desc" placeholder="項目內容" class="w-full border-none rounded-xl p-3 text-sm bg-slate-50 outline-none">
-                <div class="flex gap-2"><input type="number" x-model.number="newExpense.amount" placeholder="金額" class="flex-grow border-none rounded-xl p-3 text-sm bg-slate-50 outline-none"><select x-model="newExpense.currency" class="border-none rounded-xl px-2 bg-slate-50 text-xs font-bold text-serenity"><option value="JPY">日圓 ¥</option><option value="TWD">台幣 $</option></select></div>
-                <select x-model="newExpense.category" class="w-full border-none rounded-xl p-3 bg-slate-50 text-sm font-bold text-gray-500"><option value="食">🍽️ 食</option><option value="行">🚌 行</option><option value="住">🏨 住</option><option value="購">🛍️ 購</option><option value="他">📦 他</option></select>
-                <button @click="addExpense" class="w-full bg-serenity text-white py-3 rounded-xl font-black shadow-lg shadow-serenity/40 active:scale-95 transition-all">記錄支出</button>
-            </div>
-            <div class="space-y-2"><template x-for="(exp, index) in expenses" :key="exp.id"><div class="card p-4 flex justify-between items-center hover:bg-slate-50 transition-colors"><div class="flex items-center gap-4"><div class="text-lg" x-text="getCategoryEmoji(exp.category)"></div><div><p class="text-sm font-bold text-gray-700" x-text="exp.desc"></p><p class="text-[10px] text-gray-400 font-medium" x-text="exp.date"></p></div></div><div class="text-right flex items-center gap-4"><p class="text-sm font-black text-serenity" x-text="(exp.currency === 'JPY' ? '¥' : '$') + exp.amount.toLocaleString()"></p><button @click="deleteExpense(index)" class="text-red-200 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div></template></div>
         </div>
     </main>
 
@@ -165,101 +128,65 @@
         const FULL_DATA = {
             itinerary: [
                 {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "早上", "Category": "交通", "Time": "~06:00", "Activity": "桃園機場集合", "Notes": "- 台北：機場接送<br>- 豐原：機場接送<br>- 台南：開車"},
-                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "交通", "Time": "08:35-13:30", "Activity": "CI130", "Notes": "Check VJW / 自動查驗通關 / 托運一件 23kg"},
-                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "交通", "Time": "約14:20", "Activity": "前往札幌市區", "Notes": "座標：42.924, 141.352"},
-                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "住宿", "Time": "15:00後可", "Activity": "Mitsui Garden Hotel West Check-in", "Notes": "免費 Bar (15:00-21:00) / 有大浴場"},
-                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "景點", "Time": "16:00", "Activity": "北海道大學 Marche Café", "Notes": "甜點＋下午茶"},
+                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "交通", "Time": "08:35-13:30", "Activity": "CI130", "Notes": "Check VJW / 托運 23kg"},
+                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "交通", "Time": "約14:20", "Activity": "前往札幌市區", "Notes": "42° 55' 28\" N 141° 21' 6\" E"},
+                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "住宿", "Time": "15:00後可", "Activity": "Mitsui Garden Hotel Sapporo West Check in", "Notes": "住宿詳情請見「資訊」分頁"},
+                {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "景點", "Time": "16:00", "Activity": "北海道大學 Marche Café & Labo", "Notes": "下午茶時光"},
                 {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "下午", "Category": "其他", "Time": "16:30", "Activity": "弄頭髮 (大姐/小小/思涵)", "Notes": "需要預約"},
                 {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "晚上", "Category": "景點", "Time": "18:00", "Activity": "札幌車站周邊", "Notes": "大通公園 / 時計台 / 電視塔"},
                 {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "晚上", "Category": "餐廳", "Time": "20:00", "Activity": "迴轉壽司 根室花丸 JR Tower", "Notes": "需抽號碼牌"},
                 {"Date": "2026/04/09", "City": "札幌", "TimeOfDay": "晚上", "Category": "逛街", "Time": "22:00", "Activity": "便利商店", "Notes": "回飯店休息"},
                 {"Date": "2026/04/10", "City": "札幌", "TimeOfDay": "早上", "Category": "餐廳", "Time": "10:30", "Activity": "北のグルメ亭 場外市場", "Notes": "接駁車飯店出發 (10分鐘)"},
-                {"Date": "2026/04/10", "City": "札幌", "TimeOfDay": "下午", "Category": "逛街", "Time": "14:00", "Activity": "PARCO 札幌 / 貍小路", "Notes": "自由活動"},
+                {"Date": "2026/04/10", "City": "札幌", "TimeOfDay": "下午", "Category": "逛街", "Time": "14:00", "Activity": "PARCO 札幌 / 貍小路", "Notes": ""},
                 {"Date": "2026/04/10", "City": "札幌", "TimeOfDay": "晚上", "Category": "餐廳", "Time": "19:00", "Activity": "成吉思汗烤肉", "Notes": "需要預約"},
-                {"Date": "2026/04/10", "City": "札幌", "TimeOfDay": "晚上", "Category": "餐廳", "Time": "21:00", "Activity": "餐後聖代 (夜パフェ)", "Notes": "需抽整理券"},
+                {"Date": "2026/04/10", "City": "札幌", "TimeOfDay": "晚上", "Category": "餐廳", "Time": "21:00", "Activity": "餐後聖代 (夜パフェ)", "Notes": "需要預約"},
                 {"Date": "2026/04/11", "City": "札幌", "TimeOfDay": "早上", "Category": "交通", "Time": "10:30", "Activity": "出發去小樽", "Notes": "車程約一小時"},
                 {"Date": "2026/04/11", "City": "中午", "Category": "餐廳", "Time": "12:00", "Activity": "小樽午餐 (候選)", "Notes": "Takara Sushi / cafe BAAL / Takinami / Naruto Main Shop"},
                 {"Date": "2026/04/11", "City": "札幌", "TimeOfDay": "下午", "Category": "景點", "Time": "14:00", "Activity": "小樽運河與伴手禮", "Notes": "六花亭、北菓樓、LeTAO"},
-                {"Date": "2026/04/11", "City": "札幌", "TimeOfDay": "下午", "Category": "交通", "Time": "17:00", "Activity": "包車前往藻岩山", "Notes": "預約 MK Taxi"},
-                {"Date": "2026/04/11", "City": "札幌", "TimeOfDay": "晚上", "Category": "景點", "Time": "18:00", "Activity": "藻岩山纜車夜景", "Notes": "需要預約"},
                 {"Date": "2026/04/11", "City": "札幌", "TimeOfDay": "晚上", "Category": "餐廳", "Time": "20:00", "Activity": "薄野燒肉喜樂", "Notes": "21:00 後套餐 6600yen"},
                 {"Date": "2026/04/12", "City": "洞爺湖", "TimeOfDay": "早上", "Category": "餐廳", "Time": "11:00", "Activity": "辛いラーメン１４ 拉麵", "Notes": "札幌南口本店"},
-                {"Date": "2026/04/12", "City": "洞爺湖", "TimeOfDay": "中午", "Category": "交通", "Time": "12:10", "Activity": "前往大通 31出口", "Notes": "接駁車集合"},
                 {"Date": "2026/04/12", "City": "洞爺湖", "TimeOfDay": "下午", "Category": "交通", "Time": "13:00", "Activity": "接駁車前往洞爺湖", "Notes": "13:00 發車"},
                 {"Date": "2026/04/12", "City": "洞爺湖", "TimeOfDay": "下午", "Category": "住宿", "Time": "15:30", "Activity": "飯店 Check in", "Notes": "ザ・レイクスイート湖の栖"},
-                {"Date": "2026/04/12", "City": "洞爺湖", "TimeOfDay": "下午", "Category": "景點", "Time": "", "Activity": "洞爺湖商店街", "Notes": "自由活動"},
                 {"Date": "2026/04/12", "City": "洞爺湖", "TimeOfDay": "晚上", "Category": "餐廳", "Time": "18:30", "Activity": "飯店晚餐", "Notes": "已預約"},
                 {"Date": "2026/04/13", "City": "洞爺湖", "TimeOfDay": "早上", "Category": "餐廳", "Time": "09:00", "Activity": "飯店早餐", "Notes": ""},
                 {"Date": "2026/04/13", "City": "洞爺湖", "TimeOfDay": "早上", "Category": "景點", "Time": "10:00", "Activity": "有珠山纜車 (Mount Usu)", "Notes": "眺望洞爺湖昭和新山"},
-                {"Date": "2026/04/13", "City": "洞爺湖", "TimeOfDay": "早上", "Category": "交通", "Time": "11:15", "Activity": "搭乘巴士移動", "Notes": ""},
                 {"Date": "2026/04/13", "City": "洞爺湖", "TimeOfDay": "中午", "Category": "餐廳", "Time": "12:00", "Activity": "洞爺湖商店街吃午餐", "Notes": ""},
                 {"Date": "2026/04/13", "City": "洞爺湖", "TimeOfDay": "下午", "Category": "景點", "Time": "12:45", "Activity": "Lake Hill Farm", "Notes": "吃冰淇淋 (17:00 關門)"},
                 {"Date": "2026/04/13", "City": "洞爺湖", "TimeOfDay": "下午", "Category": "景點", "Time": "14:30", "Activity": "中島觀光 (Nakajima Museum)", "Notes": ""},
                 {"Date": "2026/04/13", "City": "洞爺湖", "TimeOfDay": "晚上", "Category": "餐廳", "Time": "18:30", "Activity": "飯店晚餐", "Notes": ""},
                 {"Date": "2026/04/14", "City": "機場", "TimeOfDay": "早上", "Category": "交通", "Time": "10:00", "Activity": "包車前往新千歲機場", "Notes": "1.5-2小時車程"},
-                {"Date": "2026/04/14", "City": "機場", "TimeOfDay": "下午", "Category": "交通", "Time": "15:00-18:15", "Activity": "CI 131 回程", "Notes": "機場最後採買"},
                 {"Date": "2026/04/14", "City": "機場", "TimeOfDay": "晚上", "Category": "交通", "Time": "約19:00", "Activity": "各自回家", "Notes": "機捷 / 白牌 / 台南開車"}
             ],
             packing: [
                 {category: "必備證件與財物", items: ["護照", "日幣", "台幣", "信用卡", "家裡鑰匙"]},
                 {category: "衣物與保暖", items: ["換洗衣物", "內衣褲", "襪子", "薄外套", "太陽眼鏡", "帽子"]},
-                {category: "電子用品", items: ["手機", "充電器", "行動電源", "耳機", "電腦＋充電器 (姊姊)", "相機及記憶卡"]},
-                {category: "衛生與藥品", items: ["牙刷牙膏", "洗面乳", "保養品", "常備藥品", "口罩", "OK繃", "隱形眼鏡"]},
+                {category: "電子用品", items: ["手機", "充電器", "行動電源", "耳機", "電腦＋充電器 (姊姊)", "相機/記憶卡"]},
+                {category: "衛生藥品", items: ["牙刷牙膏", "洗面乳", "保養品", "常備藥品", "口罩", "OK繃"]},
                 {category: "其他實用物品", items: ["雨傘 (折疊)", "水瓶/保溫瓶", "環保袋", "旅行枕", "眼罩", "耳塞"]}
             ],
             conv_store: [
-                {
-                    "store": "👑 Seicomart (北海道限定必吃)",
-                    "items": [
-                        {"name": "Hot Chef 現炸豬排丼", "desc": "絕對冠軍！店內現煮，肉厚且蛋液滑嫩。"},
-                        {"name": "Hot Chef 現做大飯糰", "desc": "溫熱巨大，推薦「明太子」或「鮭魚」。"},
-                        {"name": "道產現炸馬鈴薯", "desc": "100% 北海道產，口感鬆軟度驚人。"},
-                        {"name": "門市現烤牛角麵包", "desc": "法國進口派皮門市現烤，外酥內軟。"},
-                        {"name": "哈密瓜霜淇淋", "desc": "自有品牌 Secoma 使用道產哈密瓜。"},
-                        {"name": "山芥末鹽拉麵 (泡麵)", "desc": "北海道特產，辛辣感直衝腦門。"},
-                        {"name": "Secoma 道產牛乳", "desc": "100% 北海道原產，奶味純粹順口。"},
-                        {"name": "100日圓義大利麵", "desc": "CP值之王，多種在地口味。"},
-                        {"name": "G7 系列紅白酒", "desc": "高品質低價位，Seicomart 獨家。"},
-                        {"name": "北海道哈密瓜沙瓦", "desc": "充滿天然果香的低酒精飲料。"}
-                    ]
-                },
-                {
-                    "store": "🏪 Lawson (甜點之王)",
-                    "items": [
-                        {"name": "BASCHEE 起司蛋糕", "desc": "焦糖味濃郁，超商甜點經典。"},
-                        {"name": "麻糬口感蛋糕捲", "desc": "Q彈蛋糕皮配上厚生乳餡。"},
-                        {"name": "生火腿包奶油乳酪", "desc": "【必吃】下酒神菜，奶油起司濃郁。"},
-                        {"name": "炸雞君 (からあげクン)", "desc": "推「北海道起司」口味，香嫩多汁。"},
-                        {"name": "Uchi Café x GODIVA 聯名", "desc": "每季必搶的高級巧克力甜點系列。"},
-                        {"name": "Premium Roll Cake", "desc": "用湯匙挖著吃的經典生乳捲。"},
-                        {"name": "蘭姆葡萄夾心餅乾", "desc": "酒香與乳酪比例完美。"},
-                        {"name": "Machikado 廚房便當", "desc": "店內現做便當，新鮮度勝過冷藏。"},
-                        {"name": "低糖質系列麵包", "desc": "健康意識族首選。"}
-                    ]
-                },
-                {
-                    "store": "🏪 7-Eleven (品質首選)",
-                    "items": [
-                        {"name": "雪肌粹系列產品", "desc": "7-11獨家，洗面乳與 BB 霜必買。"},
-                        {"name": "雞蛋沙拉三明治", "desc": "蛋香濃郁且吐司極其軟綿。"},
-                        {"name": "砂糖奶油樹餅乾 (聯名款)", "desc": "必買超商聯名伴手禮，品質極高。"},
-                        {"name": "巧克力一口酥餅乾", "desc": "100日圓親民價，巧克力控必買。"},
-                        {"name": "現打果昔 (Smoothie)", "desc": "現場機器攪拌，新鮮看得見。"},
-                        {"name": "Nanachiki 炸雞", "desc": "獨門辛香料調味，皮薄多汁。"},
-                        {"name": "金之燉牛肉 (袋裝)", "desc": "「金系列」代表作，肉塊入口即化。"}
-                    ]
-                },
-                {
-                    "store": "🏪 FamilyMart (全家限定)",
-                    "items": [
-                        {"name": "全家炸雞 (FamiChiki)", "desc": "無骨脆皮多汁，標誌商品。"},
-                        {"name": "舒芙蕾布丁", "desc": "綿密蛋糕搭配濃郁布丁。"},
-                        {"name": "牧場牛奶冰淇淋", "desc": "包裝可愛，奶味濃度極高。"},
-                        {"name": "FamilyMart 咖啡冰沙", "desc": "倒入熱牛奶攪拌。"},
-                        {"name": "照燒雞肉蛋飯糰", "desc": "經典日式風味。"},
-                        {"name": "手捏風格大飯糰", "desc": "類似現做口感。"}
-                    ]
-                }
+                { "store": "👑 Seicomart", "items": [{"name": "Hot Chef 豬排丼", "desc": "絕對冠軍！店內現煮肉厚蛋嫩。"}, {"name": "Hot Chef 大飯糰", "desc": "溫熱巨大，推薦「明太子」或「鮭魚」。"}, {"name": "道產炸馬鈴薯", "desc": "100% 北海道產，門市現炸鬆軟驚人。"}, {"name": "門市現烤牛角麵包", "desc": "法國進口派皮門市現烤，外酥內軟。"}, {"name": "Secoma 哈密瓜霜淇淋", "desc": "採用道產赤肉哈密瓜，果香濃郁。"}, {"name": "山芥末鹽拉麵", "desc": "北海道特產，辛辣感直衝腦門。"}, {"name": "100日圓義大利麵", "desc": "CP值之王，多種口味。"}, {"name": "G7 系列紅白酒", "desc": "高品質低價位，Seicomart 獨家。"}, {"name": "炸雞塊 (Zangi)", "desc": "道產風味。"}, {"name": "哈密瓜沙瓦", "desc": "天然果香低酒精。"}] },
+                { "store": "🏪 Lawson", "items": [{"name": "BASCHEE 起司蛋糕", "desc": "焦糖味濃郁，口感極綿密。"}, {"name": "麻糬口感蛋糕捲", "desc": "Q彈蛋糕皮配厚生乳餡。"}, {"name": "生火腿包奶油乳酪", "desc": "【必吃】下酒神菜，奶油起司濃郁。"}, {"name": "炸雞君", "desc": "推北海道起司口味。"}, {"name": "Uchi Café x GODIVA 聯名", "desc": "每季必搶高級甜點。"}, {"name": "Premium Roll Cake", "desc": "經典生乳捲。"}, {"name": "蘭姆葡萄夾心餅", "desc": "酒香比例完美。"}, {"name": "Machikado 便當", "desc": "店內現做新鮮。"}, {"name": "低糖質麵包", "desc": "健康首選。"}, {"name": "惡魔飯糰", "desc": "天婦羅碎屑配海苔。"}] },
+                { "store": "🏪 7-Eleven", "items": [{"name": "雪肌粹系列", "desc": "7-11 獨家必買榜首。"}, {"name": "雞蛋沙拉三明治", "desc": "全世界公認經典，吐司極軟。"}, {"name": "砂糖奶油樹餅乾", "desc": "聯名伴手禮品質極高。"}, {"name": "現打果昔 (Smoothie)", "desc": "現場機器攪拌新鮮。"}, {"name": "金之燉牛肉", "desc": "肉塊入口即化。"}, {"name": "Nanachiki 炸雞", "desc": "辛香料調味皮薄多汁。"}, {"name": "蒙古湯麵中本", "desc": "嗜辣者朝聖名店泡麵。"}, {"name": "炙燒明太子飯糰", "desc": "口感最為飽滿。"}, {"name": "生咖啡", "desc": "香氣穩定市佔第一。"}, {"name": "沙拉雞肉", "desc": "軟嫩不乾。"}] },
+                { "store": "🏪 FamilyMart", "items": [{"name": "全家炸雞 (FamiChiki)", "desc": "無骨脆皮多汁，標誌商品。"}, {"name": "舒芙蕾布丁", "desc": "全家甜點王，層次感強。"}, {"name": "牧場牛奶冰淇淋", "desc": "50%牛奶，奶味極高。"}, {"name": "FamilyMart 咖啡冰沙", "desc": "倒入熱牛奶攪拌。"}, {"name": "照燒雞肉蛋飯糰", "desc": "經典日式風味。"}, {"name": "全家可麗餅", "desc": "餅皮軟Q。"}, {"name": "手捏風格大飯糰", "desc": "類似現做口感。"}, {"name": "麻辣花生/鹹味零食", "desc": "下酒菜系列。"}, {"name": "維他命飲品", "desc": "健康飲品齊全。"}, {"name": "厚切豬排三明治", "desc": "飽腹感首選。"}] }
+            ],
+            japanesePhrases: [
+                { "category": "禮儀生活 (礼儀) Reigi", "phrases": [
+                    {"zh": "你好", "jp": "こんにちは", "romaji": "Konnichiwa"}, {"zh": "謝謝", "jp": "ありがとうございます", "romaji": "Arigatou gozaimasu"},
+                    {"zh": "對不起/請問", "jp": "すみません", "romaji": "Sumimasen"}, {"zh": "早上好", "jp": "おはようございます", "romaji": "Ohayou gozaimasu"},
+                    {"zh": "晚上好", "jp": "こんばんは", "romaji": "Konbanwa"}, {"zh": "再見", "jp": "さようなら", "romaji": "Sayounara"},
+                    {"zh": "請問廁所在哪？", "jp": "トイレはどこですか？", "romaji": "Toire wa doko desu ka?"}, {"zh": "請多關照", "jp": "よろしくお願いします", "romaji": "Yoroshiku onegai shimasu"},
+                    {"zh": "請", "jp": "お願いします", "romaji": "Onegai shimasu"}, {"zh": "沒關係", "jp": "大丈夫です", "romaji": "Daijoubu desu"}
+                ]},
+                { "category": "吃飯美食 (食事) Shokuji", "phrases": [
+                    {"zh": "請給我菜單", "jp": "メニューをください", "romaji": "Menyuu o kudasai"}, {"zh": "請給我推薦項目", "jp": "おすすめをお願いします", "romaji": "Osusume o onegai shimasu"},
+                    {"zh": "這道菜很好吃！", "jp": "この料理はおいしいです！", "romaji": "Kono ryouri wa oishii desu!"}, {"zh": "可以點餐嗎？", "jp": "注文してもいいですか？", "romaji": "Chuumon shite mo ii desu ka?"},
+                    {"zh": "我不吃海鮮", "jp": "私は海鮮を食べません", "romaji": "Watashi wa kaisen o tabemasen"}, {"zh": "多謝招待", "jp": "ごちそうさまでした", "romaji": "Gochisousama deshita"}
+                ]},
+                { "category": "購物血拼 (買い物) Kaimono", "phrases": [
+                    {"zh": "這個多少錢？", "jp": "これはいくらですか？", "romaji": "Kore wa ikura desu ka?"}, {"zh": "我想要這個", "jp": "これをください", "romaji": "Kore o kudasai"},
+                    {"zh": "可以便宜點嗎？", "jp": "安くなりますか？", "romaji": "Yasuku narimasu ka?"}, {"zh": "可以用信用卡嗎？", "jp": "クレジットカードは使えますか？", "romaji": "Kurejitto kaado wa tsukaemasu ka?"}
+                ]}
             ]
         };
 
@@ -267,47 +194,30 @@
             return {
                 tab: 'schedule', selectedDate: '2026/04/09', searchQuery: '',
                 dates: [...new Set(FULL_DATA.itinerary.map(i => i.Date))],
-                packing: FULL_DATA.packing, conv_store: FULL_DATA.conv_store,
-                tabIcons: { schedule: 'calendar', info: 'info', packing: 'briefcase', store: 'shopping-bag', budget: 'wallet' },
-                tabNames: { schedule: '行程', info: '資訊', packing: '行李', store: '超商', budget: '記帳' },
-                checkedItems: JSON.parse(localStorage.getItem('hk_p_v17') || '{}'),
-                expenses: JSON.parse(localStorage.getItem('hk_b_v17') || '[]'),
-                newExpense: { desc: '', amount: '', currency: 'JPY', category: '食' },
-                
-                init() {
-                    lucide.createIcons();
+                packing: FULL_DATA.packing, conv_store: FULL_DATA.conv_store, japanesePhrases: FULL_DATA.japanesePhrases,
+                tabIcons: { schedule: 'calendar', info: 'info', packing: 'briefcase', store: 'shopping-bag', japanese: 'languages' },
+                tabNames: { schedule: '行程', info: '資訊', packing: '行李', store: '超商', japanese: '日文' },
+                checkedItems: JSON.parse(localStorage.getItem('hk_p_v18') || '{}'),
+                init() { 
+                    lucide.createIcons(); 
                     this.$watch('tab', () => this.$nextTick(() => lucide.createIcons()));
-                    this.$watch('checkedItems', v => localStorage.setItem('hk_p_v17', JSON.stringify(v)));
-                    this.$watch('expenses', v => localStorage.setItem('hk_b_v17', JSON.stringify(v)));
+                    this.$watch('checkedItems', v => localStorage.setItem('hk_p_v18', JSON.stringify(v)));
                 },
-                
-                // 判斷是否顯示地圖連結
-                shouldShowMap(activity) {
-                    if (!activity) return false;
-                    const excluded = ['各自回家', '便利商店', 'check out', '巴士', '各自前往', '自由活動', '各自前往', '弄頭髮'];
-                    return !excluded.some(term => activity.toLowerCase().includes(term));
-                },
-
+                changeTab(t) { this.tab = t; },
                 get selectedCity() { return FULL_DATA.itinerary.find(i => i.Date === this.selectedDate)?.City || '札幌'; },
-                get filteredItinerary() {
+                get filteredItinerary() { 
                     let items = FULL_DATA.itinerary.filter(i => i.Date === this.selectedDate);
                     if (this.searchQuery) return items.filter(i => i.Activity.includes(this.searchQuery) || (i.Notes && i.Notes.includes(this.searchQuery)));
                     return items;
                 },
-                get totalJPY() { return this.expenses.reduce((acc, cur) => acc + (cur.currency === 'JPY' ? cur.amount : cur.amount / 0.22), 0); },
-                get totalTWD() { return Math.round(this.totalJPY * 0.22); },
-                get chartPercent() { return this.totalJPY > 0 ? Math.min(100, Math.round((this.totalJPY / 200000) * 100)) : 0; },
-                getCatTotal(cat) { return this.expenses.filter(e => e.category === cat).reduce((acc, cur) => acc + (cur.currency === 'JPY' ? cur.amount : cur.amount / 0.22), 0); },
-                addExpense() {
-                    if (!this.newExpense.desc || !this.newExpense.amount) return;
-                    this.expenses.unshift({ ...this.newExpense, id: Date.now(), date: new Date().toLocaleDateString() });
-                    this.newExpense = { desc: '', amount: '', currency: 'JPY', category: '食' };
+                shouldShowMap(act) { 
+                    const exc = ['各自回家', '便利商店', 'Check out', '巴士', '自由活動', '飯店早餐', '飯店晚餐'];
+                    return act && !exc.some(e => act.includes(e));
                 },
-                deleteExpense(index) { this.expenses.splice(index, 1); },
-                getCategoryEmoji(cat) { const map = {食: '🍽️', 行: '🚌', 住: '🏨', 購: '🛍️', 他: '📦'}; return map[cat] || '💰'; },
+                speak(text) { const msg = new SpeechSynthesisUtterance(); msg.text = text; msg.lang = 'ja-JP'; window.speechSynthesis.speak(msg); },
                 getCatStyles(cat) {
-                    const styles = { '交通': { bg: 'bg-blue-400', text: 'text-blue-500', icon: 'bus' }, '餐廳': { bg: 'bg-rose-400', text: 'text-rose-500', icon: 'utensils' }, '景點': { bg: 'bg-green-400', text: 'text-green-500', icon: 'camera' }, '住宿': { bg: 'bg-indigo-400', text: 'text-indigo-500', icon: 'home' }, '逛街': { bg: 'bg-pink-400', text: 'text-pink-500', icon: 'shopping-bag' }, '其他': { bg: 'bg-gray-400', text: 'text-gray-500', icon: 'more-horizontal' } };
-                    return styles[cat] || styles['其他'];
+                    const s = { '交通': { bg: 'bg-blue-400', text: 'text-blue-500', icon: 'bus' }, '餐廳': { bg: 'bg-rose-400', text: 'text-rose-500', icon: 'utensils' }, '景點': { bg: 'bg-green-400', text: 'text-green-500', icon: 'camera' }, '住宿': { bg: 'bg-indigo-400', text: 'text-indigo-500', icon: 'home' }, '逛街': { bg: 'bg-pink-400', text: 'text-pink-500', icon: 'shopping-bag' } };
+                    return s[cat] || { bg: 'bg-gray-400', text: 'text-gray-500', icon: 'more-horizontal' };
                 }
             }
         }
